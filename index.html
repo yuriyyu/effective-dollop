@@ -1,0 +1,241 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+	<link rel="stylesheet" type="text/css" href="/js/jquery.timepicker.min.css"/ >
+	
+	<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<script src="/js/jquery.timepicker.min.js"></script>
+	
+	<style>
+		* 
+		{
+		  font-family: Courier New;;
+		}
+		
+		td 
+		{
+		  text-align: center;
+		  text-margin: 2px;
+		  vertical-align: middle;
+		}
+	
+		.btn 
+		{
+		  background: #74818a;
+		  background-image: -webkit-linear-gradient(top, #74818a, #15415c);
+		  background-image: -moz-linear-gradient(top, #74818a, #15415c);
+		  background-image: -ms-linear-gradient(top, #74818a, #15415c);
+		  background-image: -o-linear-gradient(top, #74818a, #15415c);
+		  background-image: linear-gradient(to bottom, #74818a, #15415c);
+		  -webkit-border-radius: 4;
+		  -moz-border-radius: 4;
+		  border-radius: 4px;
+		  color: #ffffff;
+		  font-size: 14px;
+		  padding: 5px 15px 5px 15px;
+		  text-decoration: none;
+		}
+		
+		.btn:hover 
+		{
+		  background: #3cb0fd;
+		  background-image: -webkit-linear-gradient(top, #3cb0fd, #3f7ba3);
+		  background-image: -moz-linear-gradient(top, #3cb0fd, #3f7ba3);
+		  background-image: -ms-linear-gradient(top, #3cb0fd, #3f7ba3);
+		  background-image: -o-linear-gradient(top, #3cb0fd, #3f7ba3);
+		  background-image: linear-gradient(to bottom, #3cb0fd, #3f7ba3);
+		  text-decoration: none;
+		}
+		
+		.error
+		{
+			color: red;
+			font-size:14px;
+		}
+	
+	</style>
+	
+    <script>
+		
+		
+		$(document).ready( function() {
+			getAppointments();
+			
+			var newForm = $("#newForm")
+			var newButton = $("#newButton")
+			var cancelButton = $("#cancelButton")
+			
+			var datepickerText = $("#datepickerText")
+			var timepickerText = $("#timepickerText")
+			var descriptionText = $("#descriptionText")
+			
+			var errorText = $("#errorText")
+			
+			cancelButton.hide();
+			newForm.hide();
+			
+			$( '#searchButton' ).click(function() {
+				console.log("Search click");
+				getAppointments( $("#searchText").val() );
+			})
+			
+			cancelButton.click( function() {
+				newForm.hide();
+				cancelButton.hide();
+				newButton.val("New");
+				
+				datepickerText.val("");
+				timepickerText.val("");
+				descriptionText.val("");
+				
+			});
+			
+			newButton.click( function() {
+			
+				var newBtnVal = newButton.val();
+				if(newBtnVal == "New") {
+					newForm.show();
+					cancelButton.show();
+					newButton.val("Add");
+				} else  if(newBtnVal == "Add") {
+					
+					var obj = new Object();
+					obj.date = datepickerText.val();
+					obj.time = timepickerText.val();
+					obj.desc = descriptionText.val();
+					
+					createAppointment(obj);
+				}
+			
+				
+			});
+			
+			datepickerText.datepicker({
+				minDate: 0
+			});
+						
+			timepickerText.timepicker({
+				timeFormat: 'H:i'
+			});
+				
+		});
+		
+		function getAppointments(searchText) {
+			$.ajax({
+                type: 'GET',
+                url: '/cgi-bin/test.pl',
+                dataType: "json",
+                data: { 'searchText': searchText },
+                success: function(res) {
+					
+					$("#table_appointments tbody").remove();
+                    console.log(res);
+                    var trHTML = '';
+                    $.each(res, function (i, item) {
+                        trHTML += '<tr><td>' + item.date + '</td><td> ' + item.time + '</td><td> ' + item.description + ' </td></tr>';
+                    });
+                    $("#table_appointments").append(trHTML);
+					
+				 },
+                error: function(jqXHR, exception) { 
+					var errorText = errorHandler(jqXHR, exception);					
+					setErrorText("Could not load appointment data", errorText);
+				}
+			});
+		
+		}
+		
+		function createAppointment(obj) {
+			$.ajax({
+				type: 'POST',
+                url: '/cgi-bin/test.pl',
+                dataType: "json",
+                data: { 'date': obj.date, 'time' : obj.time, 'desc' : obj.desc },
+                success: function(res) {
+					if(res.error) {
+						setErrorText("Could not create an appointment.", res.error);
+					} else {
+						location.reload();
+					}
+				},
+                error: function(jqXHR, exception) { 
+					var errorText = errorHandler(jqXHR, exception);					
+					setErrorText("Could not create an appointment.", errorText);
+				}
+			});
+		}
+		
+		function errorHandler(jqXHR, exception) {
+			var msg = '';
+			if (jqXHR.status === 0) {
+				msg = 'Not connect. Verify Network.';
+			} else if (jqXHR.status == 404) {
+				msg = 'Page not found. [404]';
+			} else if (jqXHR.status == 500) {
+				msg = 'Internal Server Error [500].';
+			} else if (exception === 'parsererror') {
+				msg = 'Parse failed.';
+			} else if (exception === 'timeout') {
+				msg = 'Time out error.';
+			} else if (exception === 'abort') {
+				msg = 'Ajax request aborted.';
+			} else {
+				msg = 'Uncaught Error. ' + jqXHR.responseText;
+			}
+			
+			return msg;
+		}
+		
+		function setErrorText(mainText, errorText) {
+			$("#errorText").html(mainText + " " + errorText);
+		}
+		
+    </script>
+    
+</head>
+
+
+
+<body>
+
+	
+<p>
+<div type="text" id="errorText" class="error"></div>
+</p>
+    
+<input type="button" value="New" id="newButton" class="btn">     
+<input type="button" value="Cancel" id="cancelButton" class="btn">
+
+<form id="newForm" action="/cgi-bin/test.pl" method="POST" autocomplete="off">
+    <p>Date: <input type="text" name="date" id="datepickerText"></p> <div id="tpicker"></div>
+	<p>Time: <input type="text" name="time" id="timepickerText"></p>
+	<p>Desc: <input type="text" name="desc" id="descriptionText"></p>	
+</form>
+
+<form action="/cgi-bin/test.pl" method="GET">
+
+	<input type="text" name="search" id="searchText" class="new_text_field"> 
+	
+	<input type="button" value="Search" id="searchButton" class="btn">
+	
+</form>
+
+<table border=1 cellpadding="0" cellspacing="0" border="0" class="display" id="table_appointments" width="400px">
+    <thead>
+        <tr>
+            <th width="30%">Date</th>
+            <th width="20%">Time</th>
+            <th width="50%">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+    
+</body>
+
+
+</html>
