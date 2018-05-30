@@ -1,9 +1,15 @@
 #!perl -w
 
+use File::Basename qw(dirname);
+use Cwd qw(abs_path);
+use lib dirname(abs_path $0).'/lib';
+
+use AppointmentHandler;
+
 use warnings;
 use strict;
 use CGI;
-use db_manager;
+
 use Time::Piece;
 use Time::ParseDate;
 use DateTime::Format::Strptime;
@@ -53,7 +59,7 @@ print $q->header(-type => 'application/json;charset=UTF-8');
 
 if($requestType eq "GET") {
 
-    my @result = db_manager::findAll($q->param("searchText"));
+    my @result = AppointmentHandler::findAll($q->param("searchText"));
     my @response;
     foreach (@result) {
 		my $datetime = $_->{"datetime"};
@@ -82,7 +88,7 @@ if($requestType eq "GET") {
 		);
 		my $dt = $parser->parse_datetime( $datetime );
 		
-		my $result = db_manager::createOne( { "datetime" => $dt->epoch,
+		my $result = AppointmentHandler::createOne( { "datetime" => $dt->epoch,
 								 "description" => $desc } );
 		
 		
