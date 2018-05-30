@@ -12,9 +12,9 @@ HTML
 
 # Installation manual:
 - Install Apache 2.4
-- Put file test.pl and db_manager.pm and appointments.db into cgi-bin folder 
+- Put file **test.pl** and **db_manager.pm** and **appointments.db** into **_cgi-bin_** folder 
 ( e.g. "C:\Apache24\cgi-bin\" )
-- Put index.html file and js folder into WEB_ROOT folder
+- Put index.html **file** and **js** folder into **_WEB_ROOT_** folder
 ( e.g "C:\Apache24\logs\" )
 - Run Apache Server
 - go to http://localhost:port
